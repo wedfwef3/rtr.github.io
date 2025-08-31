@@ -215,12 +215,17 @@ prevDiamondCount = tonumber(DiamondCount.Text) or 0
 
 repeat task.wait(0.1) until workspace:FindFirstChild("Diamond", true)
 
+-- NEW: Collect diamonds on ground as soon as they appear (up to 2 seconds)
 local diamondsFound = 0
-for _, v in pairs(workspace:GetDescendants()) do
-    if v.ClassName == "Model" and v.Name == "Diamond" then
-        Remote:FireServer(v)
-        diamondsFound = diamondsFound + 1
+local collectStart = tick()
+while (tick() - collectStart) < 2 do
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.ClassName == "Model" and v.Name == "Diamond" then
+            Remote:FireServer(v)
+            diamondsFound = diamondsFound + 1
+        end
     end
+    task.wait(0.1)
 end
 
 updateInfo("Took all diamonds (" .. diamondsFound .. "), hopping server...")

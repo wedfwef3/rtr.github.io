@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local CoreGui = game:GetService("StarterGui")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local Remote = game:GetService("ReplicatedStorage").RemoteEvents.RequestTakeDiamonds
@@ -209,26 +208,22 @@ if not success then
     end
 end
 
-updateInfo("Searching for diamonds in workspace...")
+updateInfo("Collecting diamonds in workspace...")
 roundActive = true
 prevDiamondCount = tonumber(DiamondCount.Text) or 0
 
-repeat task.wait(0.1) until workspace:FindFirstChild("Diamond", true)
-
--- NEW: Collect diamonds on ground as soon as they appear (up to 2 seconds)
-local diamondsFound = 0
-local collectStart = tick()
-while (tick() - collectStart) < 2 do
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v.ClassName == "Model" and v.Name == "Diamond" then
-            Remote:FireServer(v)
-            diamondsFound = diamondsFound + 1
+task.spawn(function()
+    while true do
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.ClassName == "Model" and v.Name == "Diamond" then
+                pcall(function()
+                    Remote:FireServer(v)
+                end)
+            end
         end
+        task.wait(0.2)
     end
-    task.wait(0.1)
-end
-
-updateInfo("Took all diamonds (" .. diamondsFound .. "), hopping server...")
+end)
 
 task.wait(1)
 hopServer()

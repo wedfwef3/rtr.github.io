@@ -34,18 +34,12 @@ local function hopServer()
             for _, server in ipairs(data.data) do
                 if server.playing < server.maxPlayers and server.id ~= game.JobId and not tried[server.id] then
                     tried[server.id] = true
-                    local tpSuccess, tpErr = pcall(function()
-                        TeleportService:TeleportToPlaceInstance(gameId, server.id, LocalPlayer)
-                    end)
-                    if tpSuccess then
-                        return
-                    else
-                        task.wait(2)
-                    end
+                    TeleportService:TeleportToPlaceInstance(gameId, server.id, LocalPlayer)
+                    task.wait(6)
                 end
             end
         end
-        task.wait(2)
+        task.wait(4)
     end
 end
 

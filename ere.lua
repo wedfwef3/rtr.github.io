@@ -163,28 +163,50 @@ repeat
     end
 until proxPrompt
 
-updateInfo("Trying to open stronghold chest...")
-
-startTime = tick()
-local chestOpened = false
-while proxPrompt and proxPrompt.Parent and (tick() - startTime) < 10 do
-    local beforeDiamonds = tonumber(DiamondCount.Text) or 0
-    pcall(function()
-        fireproximityprompt(proxPrompt)
-    end)
-    task.wait(0.2)
-    local afterDiamonds = tonumber(DiamondCount.Text) or 0
-    if afterDiamonds > beforeDiamonds then
-        chestOpened = true
-        break
-    end
+local function distance(a, b)
+    return (a - b).Magnitude
 end
 
-if not chestOpened then
-    updateInfo("Couldn't open stronghold chest, hopping server...")
-    roundActive = false
-    hopServer()
-    return
+local function tryOpenChest()
+    startTime = tick()
+    local chestOpened = false
+    while proxPrompt and proxPrompt.Parent and (tick() - startTime) < 6 do
+        local beforeDiamonds = tonumber(DiamondCount.Text) or 0
+        pcall(function()
+            fireproximityprompt(proxPrompt)
+        end)
+        task.wait(0.35)
+        local afterDiamonds = tonumber(DiamondCount.Text) or 0
+        if afterDiamonds > beforeDiamonds then
+            chestOpened = true
+            break
+        end
+    end
+    return chestOpened
+end
+
+updateInfo("Trying to open stronghold chest...")
+local posBefore = LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Position
+local success = tryOpenChest()
+
+if not success then
+    local posAfter = LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Position
+    if distance(posBefore, posAfter) > 50 then
+        updateInfo("Couldn't open stronghold chest, hopping server...")
+        roundActive = false
+        hopServer()
+        return
+    end
+    updateInfo("Retrying chest...")
+    LocalPlayer.Character:PivotTo(CFrame.new(chest:GetPivot().Position))
+    task.wait(0.35)
+    success = tryOpenChest()
+    if not success then
+        updateInfo("Couldn't open stronghold chest, hopping server...")
+        roundActive = false
+        hopServer()
+        return
+    end
 end
 
 updateInfo("Searching for diamonds in workspace...")

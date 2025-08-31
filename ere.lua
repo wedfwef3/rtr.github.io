@@ -24,6 +24,7 @@ end
 
 local function hopServer()
     local gameId = game.PlaceId
+    local tried = {}
     while true do
         local success, body = pcall(function()
             return game:HttpGet(("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(gameId))
@@ -31,17 +32,20 @@ local function hopServer()
         if success then
             local data = HttpService:JSONDecode(body)
             for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    while true do
-                        pcall(function()
-                            TeleportService:TeleportToPlaceInstance(gameId, server.id, LocalPlayer)
-                        end)
-                        task.wait(0.1)
+                if server.playing < server.maxPlayers and server.id ~= game.JobId and not tried[server.id] then
+                    tried[server.id] = true
+                    local tpSuccess, tpErr = pcall(function()
+                        TeleportService:TeleportToPlaceInstance(gameId, server.id, LocalPlayer)
+                    end)
+                    if tpSuccess then
+                        return
+                    else
+                        task.wait(2)
                     end
                 end
             end
         end
-        task.wait(0.2)
+        task.wait(2)
     end
 end
 
